@@ -1,5 +1,7 @@
 package exercises
 
+import org.scalatest.FlatSpec
+
 object Combinators2 {
 
 //    2.5 балла
@@ -23,6 +25,28 @@ object Combinators2 {
 //  Переносы на следующую строчку делать можно)))
 
 
-  def checksum(ipt: Stream[String]): Int = ???
+  def checksum(stream: Stream[String]): Int = {
+    stream.map(
+      _.foldLeft(Map[Char, Int]())((map, char) => if (map.contains(char)) map + (char -> (map(char) + 1)) else map + (char -> 1))
+    ).map(
+      map => List(map.count(_._2 == 2) min 1, map.count(_._2 == 3) min 1)
+    ).foldLeft(List(0, 0))((total, pair) => total.zip(pair).map(p => p._1 + p._2)).product
+  }
+}
 
+class Combinators2Tests extends FlatSpec {
+  import Combinators2._
+
+  "checksum" should "solve example correctly" in {
+    val stream = List(
+      "abcdef",
+      "bababc",
+      "abbcde",
+      "abcccd",
+      "aabcdd",
+      "abcdee",
+      "ababab"
+    ).toStream
+    assert(checksum(stream) == 12)
+  }
 }

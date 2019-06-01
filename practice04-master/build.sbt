@@ -11,3 +11,6 @@ lazy val root = (project in file("."))
       Seq(acceptanceTestsPath := "exercises")
     )
   )
+
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.5"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
