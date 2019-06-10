@@ -34,7 +34,7 @@ object DiffList {
   final class DiffListImpl[A](listFunc: List[A] => List[A]) extends DiffList[A](listFunc) {
     def prepend(s: List[A]): DiffList[A] = new DiffListImpl[A](s ::: listFunc(_))
 
-    def append(s: List[A]): DiffList[A] = new DiffListImpl[A](listFunc(_) ++ s)
+    def append(s: List[A]): DiffList[A] = new DiffListImpl[A](listFunc(_) ::: s)
 
     def result: List[A] = listFunc(Nil)
   }
