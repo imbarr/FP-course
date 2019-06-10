@@ -30,7 +30,9 @@ object Combinators2 {
       _.foldLeft(Map[Char, Int]())((map, char) => if (map.contains(char)) map + (char -> (map(char) + 1)) else map + (char -> 1))
     ).map(
       map => List(map.count(_._2 == 2) min 1, map.count(_._2 == 3) min 1)
-    ).foldLeft(List(0, 0))((total, pair) => total.zip(pair).map(p => p._1 + p._2)).product
+    ).foldLeft(List(0, 0))((total, pair) => total.zip(pair).map(p => p._1 + p._2))
+      .map(_ max 1)
+      .product
   }
 }
 
@@ -48,5 +50,9 @@ class Combinators2Tests extends FlatSpec {
       "ababab"
     ).toStream
     assert(checksum(stream) == 12)
+  }
+
+  it should "return 1 for empty stream" in {
+    assert(checksum(Nil.toStream) == 1)
   }
 }
