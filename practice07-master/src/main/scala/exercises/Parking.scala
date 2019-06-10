@@ -2,6 +2,7 @@ package exercises
 
 import Parkable._
 import Parking._
+import org.scalatest.FlatSpec
 
 //Определите функцию contramap
 //определите необходимые вам инстансы для Parkable (исходите из типов)
@@ -13,7 +14,9 @@ trait Parkable[A] { self =>
 
   def park(value: A): String
 
-  def contramap[B](func: B => A): Parkable[B] = ???
+  def contramap[B](func: B => A): Parkable[B] = new Parkable[B] {
+    override def park(value: B): String = self.park(func(value))
+  }
 }
 
 object Parkable {
@@ -36,13 +39,13 @@ object Parking {
       def park(value: Int): String =
         "Park a car with # " + value
     }
-
 }
 
-object Parks extends App {
-  println(NormalCar("VAZ", 777).park(parkByBrand.contramap((c: NormalCar) => c.brand)))
-  //Park a car brand VAZ
-
-//  println(NormalCar("VAZ", 777).park(parkByNumber.contramap(???)))
-  //Park a car with # 777
+class ParkingSpec extends FlatSpec {
+  "NormalCar parking" should "work as in examples" in {
+    val byBrand = NormalCar("VAZ", 777).park(parkByBrand.contramap(_.brand))
+    assert(byBrand == "Park a car brand VAZ")
+    val byNumber = NormalCar("VAZ", 777).park(parkByNumber.contramap(_.number))
+    assert(byNumber == "Park a car with # 777")
+  }
 }

@@ -1,6 +1,7 @@
 package exercises
 
 import Codec._
+import org.scalatest.FlatSpec
 
 //  Аналогично contramap определите функцию imap
 //с его помощью определите Codec для класса Box
@@ -14,7 +15,11 @@ trait Codec[A] { self =>
 
   def decode(value: String): A
 
-  def imap[B](dec: A => B, enc: B => A): Codec[B] = ???
+  def imap[B](dec: A => B, enc: B => A): Codec[B] = new Codec[B] {
+    override def encode(value: B): String = self.encode(enc(value))
+
+    override def decode(value: String): B = dec(self.decode(value))
+  }
 }
 
 object Codec {
@@ -45,17 +50,13 @@ case class Box[A](value: A)
 
 object Box {
 
-  implicit def boxCodec[A](implicit C: Codec[A]): Codec[Box[A]] = ???
-
+  implicit def boxCodec[A: Codec]: Codec[Box[A]] =
+    implicitly[Codec[A]].imap(Box(_), _.value)
 }
 
-
-object Codecs extends App {
-
-  println(Box(1).encode)
-  // 1
-
-  println("12346".decode[Box[Int]])
-  // Box(123456)
-
+class CodecSpec extends FlatSpec {
+  "Box codec" should "work" in {
+    assert(Box(1).encode == "1")
+    assert("12346".decode[Box[Int]] == Box(12346))
+  }
 }

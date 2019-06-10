@@ -1,6 +1,9 @@
 package exercises
 
 import examples.States.State
+import org.scalatest.FlatSpec
+
+import scala.util.Try
 
 //Напишите калькулятор, который позволяет вычислять сложные выражения без расстановки скобок
 //нпр
@@ -17,36 +20,62 @@ import examples.States.State
 //
 //5 баллов
 
+object FromStringInteger {
+  def unapply(s: String): Option[Int] = Try(s.toInt).toOption
+}
+
 
 object Calculator {
 
   type CalcState[A] = State[List[Int], A]
 
-  def operand(num: Int): CalcState[Int] = ???
+  def operand(num: Int): CalcState[Int] = State(stack => (num, num :: stack))
 
-  def operator(func: (Int, Int) => Int): CalcState[Int] = ???
+  def operator(func: (Int, Int) => Int): CalcState[Int] = State {
+    case first :: second :: left =>
+      val result = func(first, second)
+      (result, result :: left)
+    case _ => throw new IllegalArgumentException("Not enough elements in the stack")
+  }
 
-  def calcSimple(sym: String): CalcState[Int] = ???
+  def calcSimple(sym: String): CalcState[Int] =
+    sym match {
+      case FromStringInteger(number) => operand(number)
+      case "+" => operator(_ + _)
+      case "*" => operator(_ * _)
+    }
 
-  val simpleExpr = for {
-    _ <- calcSimple("1")
-    _ <- calcSimple("2")
-    answr <- calcSimple("+")
-  } yield answr
+  def calcNested(input: List[String]): CalcState[Int] =
+    input match {
+      case head :: tail => tail.foldLeft(calcSimple(head))((state, s) => for(_ <- state; c <- calcSimple(s)) yield c)
+      case _ => throw new IllegalArgumentException("Input is empty")
+    }
+}
 
+class CalculatorSpec extends FlatSpec {
+  import Calculator._
 
-  println(simpleExpr.run(Nil)._1 == 3)
+  "calcSimple" should "work with example" in {
+    val simpleExpr = for {
+      _ <- calcSimple("1")
+      _ <- calcSimple("2")
+      _ <- calcSimple("+")
+      _ <- calcSimple("3")
+      _ <- calcSimple("4")
+      _ <- calcSimple("+")
+      answer <- calcSimple("*")
+    } yield answer
 
+    assert(simpleExpr.run(Nil)._1 == 21)
+  }
 
+  "calcNested" should "work with example" in {
+    val nestedExpr = for {
+      _ <- calcNested(List("1", "2", "+"))
+      _ <- calcNested(List("3", "4", "+"))
+      answer <- calcSimple("*")
+    } yield answer
 
-  def calcNested(input: List[String]): CalcState[Int] = ???
-
-  val nestedExpr = for {
-    _ <- calcNested(List("1", "2", "+"))
-    _ <- calcNested(List("3", "4", "+"))
-    answr <- calcSimple("*")
-  } yield answr
-
-  println(nestedExpr.run(Nil)._1 == 21)
-
+    assert(nestedExpr.run(Nil)._1 == 21)
+  }
 }
