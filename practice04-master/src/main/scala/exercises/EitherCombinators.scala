@@ -35,14 +35,15 @@ object EitherCombinators {
 
   object Either {
     def traverse[E, A, B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
-      es.foldLeft[Either[E, List[B]]](Right(Nil)) { (acc, value) =>
-        f(value) match {
+      sequence(es.map(f))
+
+    def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] =
+      es.foldLeft[Either[E, List[A]]](Right(Nil)) { (acc, value) =>
+        value match {
           case Right(result) => acc.map(result :: _)
           case Left(error) => Left(error)
         }
       }
-
-    def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] = ???
   }
 
 }
